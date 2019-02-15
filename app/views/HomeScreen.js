@@ -8,12 +8,21 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Progress from 'react-native-progress';
 import Modal from "react-native-modal";
 import RadioForm, {RadioButton,  RadioButtonInput,  RadioButtonLabel} from 'react-native-simple-radio-button';
+import {
+  Menu,
+  MenuOptions,
+  MenuOption,
+  MenuTrigger,
+  renderers
+} from 'react-native-popup-menu';
+const { SlideInMenu } = renderers;
 
 class HomeScreen extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       wordsList: [],
+      filteredWordsList: [],
       progress: 0,
       indeterminate: true,
       isDataLoaded: false,
@@ -34,6 +43,7 @@ class HomeScreen extends React.Component {
         words.push(word);
       });
       this.setState({wordsList: words});
+      this.setState({filteredWordsList: words});
       this.setState({isDataLoaded: true});
     }, (error) => {
       console.warn(error);
@@ -71,7 +81,18 @@ class HomeScreen extends React.Component {
               onPress = { () => navigation.navigate('AddWord', {callback: this.loadData}) }/>
           </View>
           <View style={{marginRight:20}}>
-            <Icon color="#fff" name="filter" size={24} onPress = { () => params.context._toggleModal() }/>
+            <Menu>
+            <MenuTrigger >
+              <Icon color="#fff" name="filter" size={24}/>
+            </MenuTrigger>
+            <MenuOptions>
+              <MenuOption onSelect={() => params.context._filterByStatus(1)} text='By Added' />
+              <MenuOption onSelect={() => params.context._filterByStatus(2)} text='By Learning' />
+              <MenuOption onSelect={() => params.context._filterByStatus(3)} text='By Learned' />
+              <MenuOption onSelect={() => params.context._filterByStatus(4)} text='Show All' />
+              <MenuOption onSelect={() => alert(`Not called`)} text='By Date Range' />
+            </MenuOptions>
+            </Menu>
           </View>
           <View style={{marginRight:10}}>
             <Icon color="#fff" name="user" size={24} onPress = { () => navigation.navigate('User') }/>
@@ -152,7 +173,22 @@ class HomeScreen extends React.Component {
     }
   }
 
-  _toggleModal = () => this.setState({ isModalVisible: !this.state.isModalVisible });
+  _filterByStatus = (status) => {
+    let words = this.state.wordsList;
+    if (status === 4){
+      this.setState({filteredWordsList: words});
+      return;
+    }
+    console.warn(words);
+    let filteredWords = words.filter((value, index) => value.status == status);
+    console.warn(filteredWords);
+    this.setState({filteredWordsList: filteredWords});
+  }
+
+  _toggleModal = () => {
+    this.setState({ isModalVisible: !this.state.isModalVisible });
+  }
+
   _showFilterStatusModal = () => {
     this.setState({ isModalVisible: false, isStatusModalVisible: true });
   }
@@ -177,10 +213,11 @@ class HomeScreen extends React.Component {
     return (
       <View style={styles.container}>
         {this.showProgressBar()}
+
         <SwipeListView
           useFlatList
           data = {
-            this.state.wordsList
+            this.state.filteredWordsList
           }
           renderItem={(data) => (
             <View style={styles.rowFront}>

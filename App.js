@@ -21,6 +21,7 @@ from 'react-navigation';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { createMaterialBottomTabNavigator } from "react-navigation-material-bottom-tabs";
 import UserScreen from './app/views/UserScreen';
+import { MenuProvider } from 'react-native-popup-menu';
 
 const RootStack = createStackNavigator(
   {
@@ -40,6 +41,9 @@ const AppContainer = createAppContainer(RootStack);
 
 export default class App extends React.Component {
   render() {
-    return <AppContainer />;
+    // return <AppContainer />;
+    return <MenuProvider>
+      < AppContainer / >
+    </MenuProvider>
   }
 }
