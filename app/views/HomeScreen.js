@@ -15,6 +15,8 @@ import {
   MenuTrigger,
   renderers
 } from 'react-native-popup-menu';
+import DatePicker from 'react-native-datepicker'
+
 const { SlideInMenu } = renderers;
 
 class HomeScreen extends React.Component {
@@ -90,7 +92,7 @@ class HomeScreen extends React.Component {
               <MenuOption onSelect={() => params.context._filterByStatus(2)} text='By Learning' />
               <MenuOption onSelect={() => params.context._filterByStatus(3)} text='By Learned' />
               <MenuOption onSelect={() => params.context._filterByStatus(4)} text='Show All' />
-              <MenuOption onSelect={() => alert(`Not called`)} text='By Date Range' />
+              <MenuOption onSelect={() => params.context._filterByDateRange()} text='By Date Range' />
             </MenuOptions>
             </Menu>
           </View>
@@ -126,12 +128,23 @@ class HomeScreen extends React.Component {
 
   getStatus = (status) => {
     switch (status) {
-      case "2":
+      case 2:
         return 'Learning';
-      case "3":
+      case 3:
         return 'Learned';
       default:
         return 'Added';
+    }
+  };
+
+  getColorStatus = (status) => {
+    switch (status) {
+      case 2:
+        return {color: '#f48404', fontWeight: "bold"};
+      case 3:
+        return {color: '#19AF05', fontWeight: "bold"};
+      default:
+        return {color: '#F5293E', fontWeight: "bold"};
     }
   };
 
@@ -185,6 +198,10 @@ class HomeScreen extends React.Component {
     this.setState({filteredWordsList: filteredWords});
   }
 
+  _filterByDateRange = () => {
+
+  }
+
   _toggleModal = () => {
     this.setState({ isModalVisible: !this.state.isModalVisible });
   }
@@ -214,6 +231,31 @@ class HomeScreen extends React.Component {
       <View style={styles.container}>
         {this.showProgressBar()}
 
+        <DatePicker
+        style={{width: 200}}
+        date={this.state.date}
+        mode="date"
+        placeholder="select date"
+        format="YYYY-MM-DD"
+        minDate="2016-05-01"
+        maxDate="2016-06-01"
+        confirmBtnText="Confirm"
+        cancelBtnText="Cancel"
+        customStyles={{
+          dateIcon: {
+            position: 'absolute',
+            left: 0,
+            top: 4,
+            marginLeft: 0
+          },
+          dateInput: {
+            marginLeft: 36
+          }
+          // ... You can check the source to find the other keys.
+        }}
+        onDateChange={(date) => {this.setState({date: date})}}
+      />
+
         <SwipeListView
           useFlatList
           data = {
@@ -222,12 +264,12 @@ class HomeScreen extends React.Component {
           renderItem={(data) => (
             <View style={styles.rowFront}>
               <View style={styles.wordContainer}>
-                <Text style={styles.word}>{data.item.word}</Text>
+                <Text style={styles.word}>{data.item.name}</Text>
                 <Text>{data.item.translate}</Text>
               </View>
               <View style={styles.wordInfoContainer}>
                 <Text>{moment(data.item.createdDate).format('DD-MMM-YYYY')}</Text>
-                <Text>{this.getStatus(data.item.status)}</Text>
+                <Text style={this.getColorStatus(data.item.status)}>{this.getStatus(data.item.status)}</Text>
               </View>
             </View>
           )}
