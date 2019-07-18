@@ -30,7 +30,8 @@ class HomeScreen extends React.Component {
       isDataLoaded: false,
       isModalVisible: false,
       isStatusModalVisible: false,
-      selectedStatusFilter: 0
+      selectedStatusFilter: 0,
+      
     }
     this.props.navigation.addListener('willFocus', () => {this.loadData();  } )
   }
