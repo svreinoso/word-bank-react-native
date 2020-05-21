@@ -10,7 +10,9 @@ import {
   Alert
 }
 from 'react-native';
-import firebase from 'react-native-firebase';
+import firebase from '@react-native-firebase/app';
+import '@react-native-firebase/database';
+import '@react-native-firebase/auth';
 import { LoginButton, AccessToken, LoginManager  } from 'react-native-fbsdk';
 
 export default class LoginView extends React.Component {
@@ -42,19 +44,34 @@ export default class LoginView extends React.Component {
   };
 
   setFacebookLogin(data) {
-    console.warn('currentUser', data);
     const credential = firebase.auth.FacebookAuthProvider.credential(data.accessToken);
-    firebase.auth().signInWithCredential(credential).then((currentUser) => {
-      console.warn('success', currentUser);
-      console.warn(JSON.stringify(currentUser.user.toJSON()))
-      firebase.database().ref('users/' + currentUser.user.uid).set(currentUser.user).then((result) => {
-        this.props.navigation.navigate('Home');
-      }).catch(e => {
-        console.warn('error savinr user:', e);
-      });
-    }).catch(e => {
-      console.warn('error auth:', e);
-    });
+    firebase.auth().signInWithCredential(credential).catch(function(error) {
+      // Handle Errors here.
+      var errorCode = error.code;
+      var errorMessage = error.message;
+      // The email of the user's account used.
+      var email = error.email;
+      // The firebase.auth.AuthCredential type that was used.
+      var credential = error.credential;
+      if (errorCode === 'auth/account-exists-with-different-credential') {
+        alert('Email already associated with another account.');
+        // Handle account linking here, if using.
+      } else {
+        console.error(error);
+      }
+     }).then(x => {
+      this.props.navigation.navigate('Home');
+     });
+    // firebase.auth().signInWithCredential(credential).then((currentUser) => {
+    //   console.log(currentUser.user.uid);
+    //   firebase.database().ref('users/' + '21').set(currentUser.user).then((result) => {
+    //     this.props.navigation.navigate('Home');
+    //   }).catch(e => {
+    //     console.warn('1 error saving user:', e);
+    //   });
+    // }).catch(e => {
+    //   console.warn('2 error auth:', e.code);
+    // });
   }
 
   setLogin() {

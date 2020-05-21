@@ -1,7 +1,9 @@
 import React from 'react';
 import {  View,  Text,  StyleSheet,  Dimensions,  TouchableOpacity,  Button,  Animated,  Alert, 
   TouchableHighlight} from 'react-native';
-import firebase from 'react-native-firebase';
+import firebase from '@react-native-firebase/app';
+import '@react-native-firebase/auth';
+import '@react-native-firebase/database';
 import { SwipeListView} from 'react-native-swipe-list-view';
 import moment from 'moment';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -54,7 +56,8 @@ class HomeScreen extends React.Component {
   }
 
   componentWillUnmount() {
-    this.willFocus.remove()
+    // this.willFocus.remove();
+    // this.props.navigation.removeListener('willFocus', null )
   }
 
   componentDidMount() {
@@ -231,7 +234,7 @@ class HomeScreen extends React.Component {
     return (
       <View style={styles.container}>
         {this.showProgressBar()}
-
+{/* 
         <DatePicker
         style={{width: 200}}
         date={this.state.date}
@@ -255,7 +258,7 @@ class HomeScreen extends React.Component {
           // ... You can check the source to find the other keys.
         }}
         onDateChange={(date) => {this.setState({date: date})}}
-      />
+      /> */}
 
         <SwipeListView
           useFlatList

@@ -1,0 +1,6 @@
+module Pods_WordBank_WordBankTests {
+  umbrella header "Pods-WordBank-WordBankTests-umbrella.h"
+
+  export *
+  module * { export * }
+}
