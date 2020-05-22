@@ -15,13 +15,13 @@ import '@react-native-firebase/database';
 import '@react-native-firebase/auth';
 import { LoginButton, AccessToken, LoginManager  } from 'react-native-fbsdk';
 
-export default class LoginView extends React.Component {
+export default class LoginView extends Component {
 
   constructor(props) {
     super(props);
-    state = {
-      email   : '',
-      password: '',
+    this.state = {
+      email   : 'blablabla@gmail.com',
+      password: 'Admin1!!',
     }
   }
 
@@ -33,6 +33,7 @@ export default class LoginView extends React.Component {
 
   static navigationOptions = {
       title: 'Login',
+      headerLeft: null,
       headerStyle: {
           backgroundColor: '#f4511e',
       },
@@ -44,6 +45,7 @@ export default class LoginView extends React.Component {
   };
 
   setFacebookLogin(data) {
+    if(!data) return;
     const credential = firebase.auth.FacebookAuthProvider.credential(data.accessToken);
     firebase.auth().signInWithCredential(credential).catch(function(error) {
       // Handle Errors here.
@@ -74,31 +76,27 @@ export default class LoginView extends React.Component {
     // });
   }
 
-  setLogin() {
-      const data = {
-        email: this.state.email,
-        password: this.state.password
-      };
-      firebase.auth().signInWithEmailAndPassword(data.email, data.password)
+  setLogin = () => {
+      if(!this.state.email) {
+        alert('Email is required');
+        return;
+      }
+      if(!this.state.password) {
+        alert('Password is required');
+        return;
+      }
+      firebase.auth().signInWithEmailAndPassword(this.state.email, this.state.password)
       .then(response => {
         this.props.navigation.navigate('Home');
       }).catch(error => {
-        console.warn(error);
+        let userNotFound = error.message.indexOf('user-not-found') > -1;
+        if(userNotFound) {
+          alert('User not found, please register first');
+        } else {
+          alert('Error verifying the credentials');
+        }
+        console.log(error.message.toString());
       });
-    console.warn(data);
-  }
-
-  onClickListener = (viewId) => {
-    switch (viewId) {
-        case 'login':
-            this.setLogin();
-            break;
-        case 'register':
-            this.props.navigation.navigate('Register');
-            break;
-        default:
-            break;
-    }
   }
 
   render() {
@@ -126,6 +124,7 @@ export default class LoginView extends React.Component {
         <View style={styles.inputContainer}>
           <Image style={styles.inputIcon} source={{uri: 'https://png.icons8.com/message/ultraviolet/50/3498db'}}/>
           <TextInput style={styles.inputs}
+              value={this.state.email}
               placeholder="Email"
               keyboardType="email-address"
               underlineColorAndroid='transparent'
@@ -135,17 +134,20 @@ export default class LoginView extends React.Component {
         <View style={styles.inputContainer}>
           <Image style={styles.inputIcon} source={{uri: 'https://png.icons8.com/key-2/ultraviolet/50/3498db'}}/>
           <TextInput style={styles.inputs}
+              value={this.state.email}
               placeholder="Password"
               secureTextEntry={true}
               underlineColorAndroid='transparent'
               onChangeText={(password) => this.setState({password})}/>
         </View>
 
-        <TouchableHighlight style={[styles.buttonContainer, styles.loginButton]} onPress={() => this.onClickListener('login')}>
+        <TouchableHighlight style={[styles.buttonContainer, styles.loginButton]} 
+          onPress={() => this.setLogin()}>
           <Text style={styles.loginText}>Login</Text>
         </TouchableHighlight>
 
-        <TouchableHighlight style={styles.buttonContainer} onPress={() => this.onClickListener('register')}>
+        <TouchableHighlight style={styles.buttonContainer} 
+          onPress={() => this.props.navigation.navigate('Register')}>
             <Text>Register</Text>
         </TouchableHighlight>
       </View>

@@ -17,7 +17,7 @@ export default class RegisterScreen extends Component {
 
   constructor(props) {
     super(props);
-    state = {
+    this.state = {
       email   : '',
       password: '',
     }
@@ -36,15 +36,17 @@ export default class RegisterScreen extends Component {
   };
 
   onClickListener = (viewId) => {
+    console.log(this.state)
     switch (viewId) {
       case 'login':
         firebase.auth().createUserWithEmailAndPassword(this.state.email, this.state.password).then(response => {
           console.warn(response);
-          firebase.database().ref('users/' + response.user.uid).set(response.user).then((result) => {
-            this.props.navigation.navigate('Home');
-          }).catch(e => {
-            console.warn('error savinr user:', e);
-          });
+          this.props.navigation.navigate('Home');
+          // firebase.database().ref('users/' + response.user.uid).set(response.user).then((result) => {
+          //   this.props.navigation.navigate('Home');
+          // }).catch(e => {
+          //   console.warn('error savinr user:', e);
+          // });
         }).catch(error => {
           console.warn( 'error registering: ', error);
         });

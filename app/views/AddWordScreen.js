@@ -14,6 +14,7 @@ from 'react-native';
 import firebase from '@react-native-firebase/app';
 import '@react-native-firebase/database';
 
+
 export default class AddWordScreen extends Component {
 
   constructor(props) {
@@ -28,8 +29,11 @@ export default class AddWordScreen extends Component {
   }
 
   componentDidMount() {
-    const wordToEdit = this.props.navigation.getParam('word');
-    if (wordToEdit) {
+    const { word } = route.params;
+    console.log(word);
+
+    // const wordToEdit = this.props.navigation.getParam('word');
+    if (word) {
       this.setState({
         word: wordToEdit.word,
         translate: wordToEdit.translate,
@@ -52,39 +56,6 @@ export default class AddWordScreen extends Component {
     },
   };
 
-  saveWord() {
-    const callback = this.props.navigation.getParam('callback');
-    let data = {
-      word: this.state.word,
-      translate: this.state.translate,
-      status: this.state.status,
-      key: this.state.key,
-      createdDate: this.state.createdDate || new Date().getTime(),
-      userId: firebase.auth().currentUser.uid
-    };
-
-    let promisse = data.key ? firebase.database().ref('words/' + data.key).set(data)
-    : firebase.database().ref('words/').push(data);
-
-    promisse.then(response => {
-      callback && callback();
-      this.props.navigation.navigate('Home', {refreshData: true});
-    }).catch(error => {
-      console.warn('error registering: ', error);
-    });
-    
-  }
-
-  onClickListener = (viewId) => {
-    switch (viewId) {
-      case 'save':
-        this.saveWord();
-        break;
-  
-      default:
-        break;
-    }
-  }
 
   render() {
 

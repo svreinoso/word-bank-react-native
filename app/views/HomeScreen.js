@@ -1,6 +1,5 @@
 import React from 'react';
-import {  View,  Text,  StyleSheet,  Dimensions,  TouchableOpacity,  Button,  Animated,  Alert, 
-  TouchableHighlight} from 'react-native';
+import {  View,  Text,  StyleSheet,  Dimensions,  TouchableOpacity,  Button} from 'react-native';
 import firebase from '@react-native-firebase/app';
 import '@react-native-firebase/auth';
 import '@react-native-firebase/database';
@@ -9,17 +8,8 @@ import moment from 'moment';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Progress from 'react-native-progress';
 import Modal from "react-native-modal";
-import RadioForm, {RadioButton,  RadioButtonInput,  RadioButtonLabel} from 'react-native-simple-radio-button';
-import {
-  Menu,
-  MenuOptions,
-  MenuOption,
-  MenuTrigger,
-  renderers
-} from 'react-native-popup-menu';
-import DatePicker from 'react-native-datepicker'
-
-const { SlideInMenu } = renderers;
+import RadioForm, {} from 'react-native-simple-radio-button';
+import {  Menu,  MenuOptions,  MenuOption,  MenuTrigger} from 'react-native-popup-menu';
 
 class HomeScreen extends React.Component {
   constructor(props) {
@@ -61,22 +51,19 @@ class HomeScreen extends React.Component {
   }
 
   componentDidMount() {
+
     this.props.navigation.setParams({
       context: this
     });
-    if (!firebase.auth().currentUser) {
-      return;
-    }
-    this.loadData();
-  }
-
-  static navigationOptions = ({ navigation }) => {
-    const {params = {}} = navigation.state;
-
-    return {
-      title: 'Home',
-      headerRight: (
-        <View style={{
+    // const {params = {}} = this.props.navigation.state;
+    this.props.navigation.setOptions(
+      {
+        title: 'Pagina',
+        headerStyle: {
+          backgroundColor: '#f4511e',
+        },
+        headerRight: () => (
+                  <View style={{
           flex: 1,
           flexDirection: 'row',
           justifyContent: 'center',
@@ -84,7 +71,7 @@ class HomeScreen extends React.Component {
         }}>
           <View style={{marginRight:20}}>
             <Icon color="#fff" name="plus-circle" size={24} 
-              onPress = { () => navigation.navigate('AddWord', {callback: this.loadData}) }/>
+              onPress = { () => this.props.navigation.navigate('EditWord', {callback: this.loadData}) }/>
           </View>
           <View style={{marginRight:20}}>
             <Menu>
@@ -92,11 +79,11 @@ class HomeScreen extends React.Component {
               <Icon color="#fff" name="filter" size={24}/>
             </MenuTrigger>
             <MenuOptions>
-              <MenuOption onSelect={() => params.context._filterByStatus(1)} text='By Added' />
-              <MenuOption onSelect={() => params.context._filterByStatus(2)} text='By Learning' />
-              <MenuOption onSelect={() => params.context._filterByStatus(3)} text='By Learned' />
-              <MenuOption onSelect={() => params.context._filterByStatus(4)} text='Show All' />
-              <MenuOption onSelect={() => params.context._filterByDateRange()} text='By Date Range' />
+              <MenuOption onSelect={() => this._filterByStatus(1)} text='By Added' />
+              <MenuOption onSelect={() => this._filterByStatus(2)} text='By Learning' />
+              <MenuOption onSelect={() => this._filterByStatus(3)} text='By Learned' />
+              <MenuOption onSelect={() => this._filterByStatus(4)} text='Show All' />
+              <MenuOption onSelect={() => this._filterByDateRange()} text='By Date Range' />
             </MenuOptions>
             </Menu>
           </View>
@@ -104,17 +91,14 @@ class HomeScreen extends React.Component {
             <Icon color="#fff" name="user" size={24} onPress = { () => navigation.navigate('User') }/>
           </View>
         </View>
-      ),
-      headerStyle: {
-        backgroundColor: 'blue',
-      },
-      headerTintColor: '#fff',
-      headerTitleStyle: {
-        fontWeight: 'bold',
-        textAlign: 'center'
-      },
-    };
-  };
+        )
+      }
+    )
+    if (!firebase.auth().currentUser) {
+      return;
+    }
+    this.loadData();
+  }
 
   closeRow(rowMap, rowKey) {
     if (rowMap[rowKey]) {
@@ -155,7 +139,7 @@ class HomeScreen extends React.Component {
   editWord(rowMap, rowKey) {
     this.closeRow(rowMap, rowKey);
     const word = this.state.wordsList.find(value => value.key === rowKey);
-    this.props.navigation.navigate('AddWord', {
+    this.props.navigation.navigate('EditWord', {
       word: word,
       callback: this.loadData
     });
@@ -197,7 +181,7 @@ class HomeScreen extends React.Component {
       return;
     }
     console.warn(words);
-    let filteredWords = words.filter((value, index) => value.status == status);
+    let filteredWords = words.filter((value) => value.status == status);
     console.warn(filteredWords);
     this.setState({filteredWordsList: filteredWords});
   }
@@ -234,31 +218,6 @@ class HomeScreen extends React.Component {
     return (
       <View style={styles.container}>
         {this.showProgressBar()}
-{/* 
-        <DatePicker
-        style={{width: 200}}
-        date={this.state.date}
-        mode="date"
-        placeholder="select date"
-        format="YYYY-MM-DD"
-        minDate="2016-05-01"
-        maxDate="2016-06-01"
-        confirmBtnText="Confirm"
-        cancelBtnText="Cancel"
-        customStyles={{
-          dateIcon: {
-            position: 'absolute',
-            left: 0,
-            top: 4,
-            marginLeft: 0
-          },
-          dateInput: {
-            marginLeft: 36
-          }
-          // ... You can check the source to find the other keys.
-        }}
-        onDateChange={(date) => {this.setState({date: date})}}
-      /> */}
 
         <SwipeListView
           useFlatList
@@ -279,8 +238,8 @@ class HomeScreen extends React.Component {
           )}
           renderHiddenItem={(data, rowMap) => (
             <View style={styles.rowBack}>
-              {/* <Text>Left</Text> */}
-              <TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnLeft]} onPress={_ => this.editWord(rowMap, data.item.key)}>
+              <TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnLeft]} 
+                onPress={_ => this.editWord(rowMap, data.item.key)}>
                 <View style={styles.rightOptions}>
                   <Icon name='edit' color='#fff' />
                   <Text style={styles.backTextWhite}>Edit</Text>
