@@ -1,15 +1,15 @@
 import React from 'react';
-import {  View,  Text,  StyleSheet,  Dimensions,  TouchableOpacity,  Button} from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Button } from 'react-native';
 import firebase from '@react-native-firebase/app';
 import '@react-native-firebase/auth';
 import '@react-native-firebase/database';
-import { SwipeListView} from 'react-native-swipe-list-view';
+import { SwipeListView } from 'react-native-swipe-list-view';
 import moment from 'moment';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Progress from 'react-native-progress';
 import Modal from "react-native-modal";
-import RadioForm, {} from 'react-native-simple-radio-button';
-import {  Menu,  MenuOptions,  MenuOption,  MenuTrigger} from 'react-native-popup-menu';
+import RadioForm, { } from 'react-native-simple-radio-button';
+import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 
 class HomeScreen extends React.Component {
   constructor(props) {
@@ -23,78 +23,79 @@ class HomeScreen extends React.Component {
       isModalVisible: false,
       isStatusModalVisible: false,
       selectedStatusFilter: 0,
-      
+
     }
-    this.props.navigation.addListener('willFocus', () => {this.loadData();  } )
+    this.props.navigation.addListener('focus', (x) => { 
+      if (!firebase.auth().currentUser) {
+        this.props.navigation.navigate('Login')
+        return;
+      }
+      this.loadData(); 
+    })
   }
 
   loadData() {
-    firebase.database().ref('words').orderByChild('userId')
-    .equalTo(firebase.auth().currentUser.uid).once('value', (response) => {
-      let words = [];
-      response.forEach(x => {
-        let word = x.toJSON();
-        word.key = x.key;
-        words.push(word);
+    const url = `users/${firebase.auth().currentUser.uid}/words/`;
+    firebase.database().ref(url)
+      .once('value', (response) => {
+        let words = [];
+        response.forEach(x => {
+          let word = x.toJSON();
+          word.key = x.key;
+          words.push(word);
+        });
+        this.setState({ wordsList: words, filteredWordsList: words, isDataLoaded: true });
+      }, (error) => {
+        console.error(error);
       });
-      this.setState({wordsList: words});
-      this.setState({filteredWordsList: words});
-      this.setState({isDataLoaded: true});
-    }, (error) => {
-      console.warn(error);
-    });
   }
 
-  componentWillUnmount() {
-    // this.willFocus.remove();
-    // this.props.navigation.removeListener('willFocus', null )
-  }
-
-  componentDidMount() {
-
-    this.props.navigation.setParams({
-      context: this
-    });
-    // const {params = {}} = this.props.navigation.state;
+  updateHeaderBar() {
     this.props.navigation.setOptions(
       {
-        title: 'Pagina',
+        title: 'Home',
         headerStyle: {
           backgroundColor: '#f4511e',
         },
         headerRight: () => (
-                  <View style={{
-          flex: 1,
-          flexDirection: 'row',
-          justifyContent: 'center',
-          alignContent: 'center',
-        }}>
-          <View style={{marginRight:20}}>
-            <Icon color="#fff" name="plus-circle" size={24} 
-              onPress = { () => this.props.navigation.navigate('EditWord', {callback: this.loadData}) }/>
+          <View style={{
+            flex: 1,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignContent: 'center',
+          }}>
+            <View style={{ marginRight: 20 }}>
+              <Icon color="#fff" name="plus-circle" size={24}
+                onPress={() => this.props.navigation.navigate('EditWord', { callback: this.loadData })} />
+            </View>
+            <View style={{ marginRight: 20 }}>
+              <Menu>
+                <MenuTrigger >
+                  <Icon color="#fff" name="filter" size={24} />
+                </MenuTrigger>
+                <MenuOptions>
+                  <MenuOption onSelect={() => this._filterByStatus(1)} text='By Added' />
+                  <MenuOption onSelect={() => this._filterByStatus(2)} text='By Learning' />
+                  <MenuOption onSelect={() => this._filterByStatus(3)} text='By Learned' />
+                  <MenuOption onSelect={() => this._filterByStatus(4)} text='Show All' />
+                  <MenuOption onSelect={() => this._filterByDateRange()} text='By Date Range' />
+                </MenuOptions>
+              </Menu>
+            </View>
+            <View style={{ marginRight: 10 }}>
+              <Icon color="#fff" name="user" size={24} onPress={() => this.props.navigation.navigate('User')} />
+            </View>
           </View>
-          <View style={{marginRight:20}}>
-            <Menu>
-            <MenuTrigger >
-              <Icon color="#fff" name="filter" size={24}/>
-            </MenuTrigger>
-            <MenuOptions>
-              <MenuOption onSelect={() => this._filterByStatus(1)} text='By Added' />
-              <MenuOption onSelect={() => this._filterByStatus(2)} text='By Learning' />
-              <MenuOption onSelect={() => this._filterByStatus(3)} text='By Learned' />
-              <MenuOption onSelect={() => this._filterByStatus(4)} text='Show All' />
-              <MenuOption onSelect={() => this._filterByDateRange()} text='By Date Range' />
-            </MenuOptions>
-            </Menu>
-          </View>
-          <View style={{marginRight:10}}>
-            <Icon color="#fff" name="user" size={24} onPress = { () => navigation.navigate('User') }/>
-          </View>
-        </View>
         )
       }
     )
+
+  }
+
+  componentDidMount() {
+    this.updateHeaderBar()
     if (!firebase.auth().currentUser) {
+      this.props.navigation.navigate('Login')
       return;
     }
     this.loadData();
@@ -117,8 +118,10 @@ class HomeScreen extends React.Component {
   getStatus = (status) => {
     switch (status) {
       case 2:
+      case "2":
         return 'Learning';
       case 3:
+      case "3":
         return 'Learned';
       default:
         return 'Added';
@@ -128,11 +131,13 @@ class HomeScreen extends React.Component {
   getColorStatus = (status) => {
     switch (status) {
       case 2:
-        return {color: '#f48404', fontWeight: "bold"};
+      case "2":
+        return { color: '#f48404', fontWeight: "bold" };
       case 3:
-        return {color: '#19AF05', fontWeight: "bold"};
+      case "3":
+        return { color: '#19AF05', fontWeight: "bold" };
       default:
-        return {color: '#F5293E', fontWeight: "bold"};
+        return { color: '#F5293E', fontWeight: "bold" };
     }
   };
 
@@ -161,9 +166,9 @@ class HomeScreen extends React.Component {
   }
 
   showProgressBar() {
-    if (!this.state.isDataLoaded){
+    if (!this.state.isDataLoaded) {
       return (
-        < View style = {{justifyContent: 'center',alignItems: 'center',} } >
+        < View style={{ justifyContent: 'center', alignItems: 'center', }} >
           <Progress.Bar
             style={styles.progress}
             progress={this.state.progress}
@@ -176,14 +181,12 @@ class HomeScreen extends React.Component {
 
   _filterByStatus = (status) => {
     let words = this.state.wordsList;
-    if (status === 4){
-      this.setState({filteredWordsList: words});
+    if (status === 4) {
+      this.setState({ filteredWordsList: words });
       return;
     }
-    console.warn(words);
     let filteredWords = words.filter((value) => value.status == status);
-    console.warn(filteredWords);
-    this.setState({filteredWordsList: filteredWords});
+    this.setState({ filteredWordsList: filteredWords });
   }
 
   _filterByDateRange = () => {
@@ -210,50 +213,50 @@ class HomeScreen extends React.Component {
     }
 
     var radio_props = [
-      {label: 'Added', value: 1 },
-      {label: 'Learning', value: 2 },
-      {label: 'Learned', value: 3 }
+      { label: 'Added', value: 1 },
+      { label: 'Learning', value: 2 },
+      { label: 'Learned', value: 3 }
     ];
 
     return (
       <View style={styles.container}>
         {this.showProgressBar()}
-
-        <SwipeListView
-          useFlatList
-          data = {
-            this.state.filteredWordsList
-          }
-          renderItem={(data) => (
-            <View style={styles.rowFront}>
-              <View style={styles.wordContainer}>
-                <Text style={styles.word}>{data.item.name}</Text>
-                <Text>{data.item.translate}</Text>
-              </View>
-              <View style={styles.wordInfoContainer}>
-                <Text>{moment(data.item.createdDate).format('DD-MMM-YYYY')}</Text>
-                <Text style={this.getColorStatus(data.item.status)}>{this.getStatus(data.item.status)}</Text>
-              </View>
-            </View>
-          )}
-          renderHiddenItem={(data, rowMap) => (
-            <View style={styles.rowBack}>
-              <TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnLeft]} 
-                onPress={_ => this.editWord(rowMap, data.item.key)}>
-                <View style={styles.rightOptions}>
-                  <Icon name='edit' color='#fff' />
-                  <Text style={styles.backTextWhite}>Edit</Text>
+        {this.state.wordsList.length > 0 &&
+          <SwipeListView
+            useFlatList
+            data={
+              this.state.filteredWordsList
+            }
+            renderItem={(data) => (
+              <View style={styles.rowFront}>
+                <View style={styles.wordContainer}>
+                  <Text style={styles.word}>{data.item.word}</Text>
+                  <Text>{data.item.translate}</Text>
                 </View>
-              </TouchableOpacity>
-            </View>
-          )}
-          rightOpenValue={-75}
-          leftOpenValue={0}
-        />
-
-        <Modal onBackdropPress={() => this.setState({isModalVisible: false})}
+                <View style={styles.wordInfoContainer}>
+                  <Text>{moment(data.item.createdDate).format('DD-MMM-YYYY')}</Text>
+                  <Text style={this.getColorStatus(data.item.status)}>{this.getStatus(data.item.status)}</Text>
+                </View>
+              </View>
+            )}
+            renderHiddenItem={(data, rowMap) => (
+              <View style={styles.rowBack}>
+                <TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnLeft]}
+                  onPress={_ => this.editWord(rowMap, data.item.key)}>
+                  <View style={styles.rightOptions}>
+                    <Icon name='edit' color='#fff' />
+                    <Text style={styles.backTextWhite}>Edit</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            )}
+            rightOpenValue={-75}
+            leftOpenValue={0}
+          />
+        }
+        <Modal onBackdropPress={() => this.setState({ isModalVisible: false })}
           isVisible={this.state.isModalVisible}>
-          <View style={{flex: 1, backgroundColor: 'white', position: "relative", alignItems: 'center'}}>
+          <View style={{ flex: 1, backgroundColor: 'white', position: "relative", alignItems: 'center' }}>
             <TouchableOpacity onPress={this._toggleModal} style={{ position: "absolute", top: 0, right: 0 }}>
               <Icon color="red" name="plus-circle" size={24} />
             </TouchableOpacity>
@@ -273,8 +276,8 @@ class HomeScreen extends React.Component {
         </Modal>
 
         <Modal isVisible={this.state.isStatusModalVisible}>
-          <View style={{flex: 1, backgroundColor: 'white', position: "relative", alignItems: 'center'}}>
-            <TouchableOpacity onPress={this._closeModal} 
+          <View style={{ flex: 1, backgroundColor: 'white', position: "relative", alignItems: 'center' }}>
+            <TouchableOpacity onPress={this._closeModal}
               style={{ position: "absolute", top: 0, right: 0 }}>
               <Icon color="red" name="plus-circle" size={24} />
             </TouchableOpacity>
@@ -284,7 +287,7 @@ class HomeScreen extends React.Component {
                 <RadioForm
                   radio_props={radio_props}
                   initial={0}
-                  onPress={(value) => {this.setState({selectedStatusFilter:value})}}
+                  onPress={(value) => { this.setState({ selectedStatusFilter: value }) }}
                 />
               </View>
               <TouchableOpacity style={styles.filterButtons}>
@@ -296,20 +299,26 @@ class HomeScreen extends React.Component {
 
       </View>
     );
-    
+
   }
 }
 
 const styles = StyleSheet.create({
   filterButtons: { marginBottom: 50 },
   rightOptions: { flex: 1, flexDirection: 'column', justifyContent: 'center', alignContent: 'center', },
-  item: { padding: 10, fontSize: 18, height: 80, borderWidth: 2, borderColor: 'gray', borderStyle: 'solid', 
-    flex: 1, flexDirection: 'row', justifyContent: 'center',  alignContent: 'center', margin: 2  },
+  item: {
+    padding: 10, fontSize: 18, height: 80, borderWidth: 2, borderColor: 'gray', borderStyle: 'solid',
+    flex: 1, flexDirection: 'row', justifyContent: 'center', alignContent: 'center', margin: 2
+  },
   word: { fontSize: 25, fontWeight: 'bold', color: 'black' },
-  wordContainer: { paddingLeft: 10, width: '50%', color: 'black', alignItems: 'stretch', alignContent: 'flex-start',
-    fontWeight: 'bold'  },
-  wordInfoContainer: { paddingRight: 10, paddingTop: 10, width: '50%', textAlign: 'right', alignContent: 'flex-end',
-    alignItems: 'flex-end' },
+  wordContainer: {
+    paddingLeft: 10, width: '50%', color: 'black', alignItems: 'stretch', alignContent: 'flex-start',
+    fontWeight: 'bold'
+  },
+  wordInfoContainer: {
+    paddingRight: 10, paddingTop: 10, width: '50%', textAlign: 'right', alignContent: 'flex-end',
+    alignItems: 'flex-end'
+  },
   container: { backgroundColor: 'white', flex: 1 },
   standalone: { marginTop: 30, marginBottom: 30, },
   standaloneRowFront: {
