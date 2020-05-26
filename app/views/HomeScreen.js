@@ -37,12 +37,16 @@ class HomeScreen extends React.Component {
   loadData() {
     const url = `users/${firebase.auth().currentUser.uid}/words/`;
     firebase.database().ref(url)
+      .orderByChild('createdDate', 'desc')
       .once('value', (response) => {
         let words = [];
         response.forEach(x => {
           let word = x.toJSON();
           word.key = x.key;
           words.push(word);
+        });
+        words.sort((a,b) => {
+          return a.createdDate < b.createdDate ? 1 : -1;
         });
         this.setState({ wordsList: words, filteredWordsList: words, isDataLoaded: true });
       }, (error) => {
@@ -64,25 +68,26 @@ class HomeScreen extends React.Component {
             justifyContent: 'center',
             alignContent: 'center',
           }}>
-            <View style={{ marginRight: 20 }}>
+            <View style={{ marginRight: 20, marginTop: 5 }}>
               <Icon color="#fff" name="plus-circle" size={24}
                 onPress={() => this.props.navigation.navigate('EditWord', { callback: this.loadData })} />
             </View>
-            <View style={{ marginRight: 20 }}>
+            <View style={{ marginRight: 20, marginTop: 5 }}>
               <Menu>
                 <MenuTrigger >
                   <Icon color="#fff" name="filter" size={24} />
                 </MenuTrigger>
-                <MenuOptions>
+                <MenuOptions customStyles={{backgroundColor: 'red'}}>
                   <MenuOption onSelect={() => this._filterByStatus(1)} text='By Added' />
                   <MenuOption onSelect={() => this._filterByStatus(2)} text='By Learning' />
                   <MenuOption onSelect={() => this._filterByStatus(3)} text='By Learned' />
                   <MenuOption onSelect={() => this._filterByStatus(4)} text='Show All' />
+                  <MenuOption onSelect={() => this._filterByTotay()} text='Added today' />
                   <MenuOption onSelect={() => this._filterByDateRange()} text='By Date Range' />
                 </MenuOptions>
               </Menu>
             </View>
-            <View style={{ marginRight: 10 }}>
+            <View style={{ marginRight: 10, marginTop: 5 }}>
               <Icon color="#fff" name="user" size={24} onPress={() => this.props.navigation.navigate('User')} />
             </View>
           </View>
@@ -141,6 +146,16 @@ class HomeScreen extends React.Component {
     }
   };
 
+  deleteWord(rowMap, rowKey) {
+    const url = `users/${firebase.auth().currentUser.uid}/words/`;
+    firebase.database().ref(url + rowKey).remove(() => {
+      const index = this.state.wordsList.findIndex(value => value.key === rowKey);
+      const words = this.state.wordsList;
+      words.splice(index, 1);
+      this.setState({wordsList: words})
+    }).then(x => {}).catch(e => {})
+  }
+
   editWord(rowMap, rowKey) {
     this.closeRow(rowMap, rowKey);
     const word = this.state.wordsList.find(value => value.key === rowKey);
@@ -177,6 +192,19 @@ class HomeScreen extends React.Component {
         </View>
       );
     }
+  }
+
+  _filterByTotay = () => {
+    let startDate = new Date();
+    startDate.setHours(0, 0, 0);
+    let endDate = new Date();
+    endDate.setHours(23, 59, 59);
+
+    let words = this.state.wordsList;
+
+    let filteredWords = words.filter((value) => 
+      value.createdDate > startDate.getTime() && value.createdDate < endDate.getTime());
+    this.setState({ filteredWordsList: filteredWords });
   }
 
   _filterByStatus = (status) => {
@@ -241,16 +269,23 @@ class HomeScreen extends React.Component {
             )}
             renderHiddenItem={(data, rowMap) => (
               <View style={styles.rowBack}>
+                <TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnLeft, {
+                  width: 75, right: 75, backgroundColor: 'red'
+                }]}
+                  onPress={_ => this.deleteWord(rowMap, data.item.key)}>
+                  <View style={styles.rightOptions}>
+                    <Icon name='trash' color='#fff' size={24} />
+                  </View>
+                </TouchableOpacity>
                 <TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnLeft]}
                   onPress={_ => this.editWord(rowMap, data.item.key)}>
                   <View style={styles.rightOptions}>
-                    <Icon name='edit' color='#fff' />
-                    <Text style={styles.backTextWhite}>Edit</Text>
+                    <Icon name='edit' color='#fff' size={24}/>
                   </View>
                 </TouchableOpacity>
               </View>
             )}
-            rightOpenValue={-75}
+            rightOpenValue={-150}
             leftOpenValue={0}
           />
         }
@@ -305,7 +340,10 @@ class HomeScreen extends React.Component {
 
 const styles = StyleSheet.create({
   filterButtons: { marginBottom: 50 },
-  rightOptions: { flex: 1, flexDirection: 'column', justifyContent: 'center', alignContent: 'center', },
+  rightOptions: { 
+    justifyContent: 'center',
+    alignContent: 'center'
+  },
   item: {
     padding: 10, fontSize: 18, height: 80, borderWidth: 2, borderColor: 'gray', borderStyle: 'solid',
     flex: 1, flexDirection: 'row', justifyContent: 'center', alignContent: 'center', margin: 2

@@ -42,7 +42,7 @@ function EditWord({ route, navigation }) {
       translate,
       status,
       key,
-      createdDate: createdDate || new Date().getTime()
+      createdDate: createdDate || new Date().getTime(),
     };
     const url = `users/${firebase.auth().currentUser.uid}/words/`;
     let promisse = data.key ? firebase.database().ref(url + data.key).set(data)
